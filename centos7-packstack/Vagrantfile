@@ -22,6 +22,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.hostmanager.ignore_private_ip = false
   config.hostmanager.include_offline = true
   config.vm.box = "centos7"
+  # config.vm.box = "askb/centos7"
   config.vm.synced_folder "/myVMs/shared", "/shared", disabled: false
 
 # newrdo2: compute host
@@ -91,7 +92,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     newrdo1.vm.provision "file", source: "newrdo1.id_dsa", destination:  "/tmp/ssh/id_dsa"
     newrdo1.vm.provision "file", source: "newrdo1.id_dsa.pub", destination:  "/tmp/ssh/id_dsa.pub"
     newrdo1.vm.provision "file", source: "known_hosts", destination:  "/tmp/ssh/known_hosts"
-    newrdo1.vm.provision "file", source: "answerfile.cfg", destination:  "/tmp/answerfile.cfg"
+    #newrdo1.vm.provision "file", source: "answerfile.cfg", destination:  "/tmp/answerfile.cfg"
     newrdo1.vm.provision "shell", inline: <<-SHELL
 	 # set the permission for the root ssh keys and authorized_keys files
 	 sudo mkdir -p /root/.ssh
@@ -124,7 +125,16 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
          #sudo yum install -y http://rdo.fedorapeople.org/rdo-release.rpm
          #sudo yum install -y openstack-packstack
 
+	 # install the following dependencies (must go into the base images ideally)
+	 # sudo /usr/bin/yum -d 0 -e 0 -y install deltarpm-3.6-3.el7.x86_64
+	 # sudo /usr/bin/yum -d 0 -e 0 -y install erlang
+
+	 # refresh the repos
+	 #yum clean all
+	 #yum update
+
 	 #sudo su -l
+	 sudo cp -f /myVMs/shared/answerfile.cfg /tmp/answerfile.cfg
          sudo packstack --answer-file=/tmp/answerfile.cfg
     SHELL
   end

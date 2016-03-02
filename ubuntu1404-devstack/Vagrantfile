@@ -39,7 +39,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         end
   end
 
-
   config.vm.provision "shell", inline: <<-SHELL
        sudo pip install --upgrade pip
        sudo pip install -U os-testr
@@ -47,15 +46,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provision "file", source: "~/.gitconfig", destination:  "~/.gitconfig"
 
-  #config.vm.provision "shell", inline: <<-SHELL
+  config.vm.provision "shell", inline: <<-SHELL
   #   sudo apt-get update
   #   sudo apt-get install -y puppet-common vim git
   #   sudo apt-get install -y virtualbox-guest-utils virtualbox-guest-x11 virtualbox-guest-dkms
   #   sudo apt-get install -y git
   #   sudo apt-get install -y wget
-  #   sudo apt-get install -y python-pip
-  #   sudo apt-get install -y python-dev
-  #SHELL
+     sudo apt-get install -y python-pip
+     sudo apt-get install -y python-dev
+  SHELL
 
   config.vm.provision "shell", path: './provision.sh', privileged: false
 end
