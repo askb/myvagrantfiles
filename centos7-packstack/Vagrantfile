@@ -1,0 +1,134 @@
+# This downloads the minimal image for CentOS7
+# Author: askb23@gmail.com
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+# Vagrantfile API/syntax version.
+#
+# Pre-req:
+# Install VirtualBox, Vagrant
+# Install plugin vagrant-hostmanager
+# $ sudo vagrant plugin install vagrant-hostmanager
+#
+# start the VM:
+# vagrant up newrdo2 newrdo1
+#
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.hostmanager.enabled = true
+  config.hostmanager.manage_host = false
+  config.hostmanager.ignore_private_ip = false
+  config.hostmanager.include_offline = true
+  config.vm.box = "centos7"
+  config.vm.synced_folder "/myVMs/shared", "/shared", disabled: false
+
+# newrdo2: compute host
+  config.vm.define "newrdo2" do |newrdo2|
+    newrdo2.vm.network :private_network, ip: "10.0.1.11"
+    newrdo2.vm.network :private_network, ip: "10.15.15.102"
+
+    newrdo2.vm.hostname = "newrdo2.mycloud.in"
+    newrdo2.hostmanager.aliases = %w(newrdo2)
+        newrdo2.vm.provider "virtualbox" do |v|
+          v.customize ["modifyvm", :id, "--memory", "4096"]
+          v.customize ["modifyvm", :id, "--cpus", "2"]
+          v.gui = false
+        end
+    # copy the root ssh keys and authorized_keys file in place
+    newrdo2.vm.provision "file", source: "authorized_keys", destination:  "/tmp/ssh/authorized_keys"
+    newrdo2.vm.provision "file", source: "newrdo2.id_dsa", destination:  "/tmp/ssh/id_dsa"
+    newrdo2.vm.provision "file", source: "newrdo2.id_dsa.pub", destination:  "/tmp/ssh/id_dsa.pub"
+    newrdo2.vm.provision "file", source: "known_hosts", destination:  "/tmp/ssh/known_hosts"
+
+    newrdo2.vm.provision "shell", inline: <<-SHELL
+	 # set the permission for the root ssh keys and authorized_keys files
+	 sudo mkdir -p /root/.ssh
+	 sudo cp -f /tmp/ssh/known_hosts /root/.ssh/known_hosts
+	 sudo chmod 644 /root/.ssh/known_hosts
+	 sudo cp -f /tmp/ssh/authorized_keys /root/.ssh/authorized_keys
+	 sudo chown root:root /root/.ssh/authorized_keys
+	 sudo chmod 644 /root/.ssh/authorized_keys
+	 sudo cp -f /tmp/ssh/id_dsa /root/.ssh/id_dsa
+	 sudo chown root:root /root/.ssh/id_dsa
+	 sudo chmod 600 /root/.ssh/id_dsa
+	 sudo cp -f /tmp/ssh/id_dsa.pub /root/.ssh/id_dsa.pub
+	 sudo chown root:root /root/.ssh/id_dsa.pub
+	 sudo chmod 644 /root/.ssh/id_dsa.pub
+	 sudo systemctl restart sshd.service
+
+         systemctl stop NetworkManager;systemctl disable NetworkManager;chkconfig network on;systemctl start network;
+
+	 # alternative way to setup ssh keys between controller node and compute nodes
+         #sudo ssh-keygen -t rsa -P "" -f /root/.ssh/id_dsa
+	 #sudo ssh-copy-id -i /root/.ssh/id_dsa.pub root@10.0.1.11
+	 #sudo cat /root/.ssh/id_dsa.pub >> /root/.ssh/authorized_keys
+
+	 #install updates and packstack rpm
+         #sudo rm -fr /var/cache/yum/*
+         #sudo yum clean all
+         #sudo yum update -y
+         #sudo yum install -y http://rdo.fedorapeople.org/rdo-release.rpm
+         #sudo yum install -y openstack-packstack
+    SHELL
+  end
+
+# newrdo1: controller node (all services except for compute)
+  config.vm.define "newrdo1" do |newrdo1|
+    newrdo1.vm.network :private_network, ip: "10.0.1.10"
+    newrdo1.vm.network :private_network, ip: "10.15.15.101"
+
+    newrdo1.vm.hostname = "newrdo1.mycloud.in"
+    newrdo1.hostmanager.aliases = %w(newrdo1)
+        newrdo1.vm.provider "virtualbox" do |v|
+          v.customize ["modifyvm", :id, "--memory", "6144"]
+          v.customize ["modifyvm", :id, "--cpus", "2"]
+          v.gui = false
+        end
+    # copy the root ssh keys and authorized_keys file in place
+    newrdo1.vm.provision "file", source: "authorized_keys", destination:  "/tmp/ssh/authorized_keys"
+    newrdo1.vm.provision "file", source: "newrdo1.id_dsa", destination:  "/tmp/ssh/id_dsa"
+    newrdo1.vm.provision "file", source: "newrdo1.id_dsa.pub", destination:  "/tmp/ssh/id_dsa.pub"
+    newrdo1.vm.provision "file", source: "known_hosts", destination:  "/tmp/ssh/known_hosts"
+    newrdo1.vm.provision "file", source: "answerfile.cfg", destination:  "/tmp/answerfile.cfg"
+    newrdo1.vm.provision "shell", inline: <<-SHELL
+	 # set the permission for the root ssh keys and authorized_keys files
+	 sudo mkdir -p /root/.ssh
+	 sudo cp -f /tmp/ssh/known_hosts /root/.ssh/known_hosts
+	 sudo chmod 644 /root/.ssh/known_hosts
+	 sudo mkdir -p /root/.ssh
+	 sudo cp -f /tmp/ssh/authorized_keys /root/.ssh/authorized_keys
+	 sudo chown root:root /root/.ssh/authorized_keys
+	 sudo chmod 644 /root/.ssh/authorized_keys
+	 sudo cp -f /tmp/ssh/id_dsa /root/.ssh/id_dsa
+	 sudo chown root:root /root/.ssh/id_dsa
+	 sudo chmod 600 /root/.ssh/id_dsa
+	 sudo cp -f /tmp/ssh/id_dsa.pub /root/.ssh/id_dsa.pub
+	 sudo chown root:root /root/.ssh/id_dsa.pub
+	 sudo chmod 644 /root/.ssh/id_dsa.pub
+	 sudo systemctl restart sshd.service
+
+         systemctl stop NetworkManager;systemctl disable NetworkManager;chkconfig network on;systemctl start network;
+
+	 # alternative way to setup ssh keys between controller node and compute nodes
+         #sudo ssh-keygen -t rsa -P "" -f /root/.ssh/id_dsa
+	 #sudo ssh-copy-id -i /root/.ssh/id_dsa.pub root@10.0.1.10
+	 #sudo cat /root/.ssh/id_dsa.pub >> /root/.ssh/authorized_keys
+	 #sudo cat /root/.ssh/id_dsa.pub >> /shared/authorized_keys
+
+	 # install update and packstack
+         #sudo rm -fr /var/cache/yum/*
+         #sudo yum clean all
+         #sudo yum update -y
+         #sudo yum install -y http://rdo.fedorapeople.org/rdo-release.rpm
+         #sudo yum install -y openstack-packstack
+
+	 #sudo su -l
+         sudo packstack --answer-file=/tmp/answerfile.cfg
+    SHELL
+  end
+
+  # common for both nodes
+  config.vm.provision "file", source: "~/.gitconfig", destination:  "~/.gitconfig"
+end
