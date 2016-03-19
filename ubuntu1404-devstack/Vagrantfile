@@ -1,4 +1,4 @@
-# This downloads the minimal image for CentOS7
+# This downloads the minimal image ubuntu 14.04 (trusty, x86_64)
 # Author: askb23@gmail.com
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
@@ -17,7 +17,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.hostmanager.manage_host = false
   config.hostmanager.ignore_private_ip = false
   config.hostmanager.include_offline = true
-  config.vm.box = "ubuntu1404"
+  config.vm.box = "ubuntu/trusty64"
   config.vm.synced_folder "/myVMs/shared", "/shared", disabled: false, mount_options: ["dmode=777", "fmode=666"]
 
   config.vm.network "forwarded_port", guest: 80, host: 8080
@@ -45,13 +45,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   SHELL
 
   config.vm.provision "file", source: "~/.gitconfig", destination:  "~/.gitconfig"
+  config.vm.provision "file", source: "./local.conf", destination:  "~/local.conf"
 
   config.vm.provision "shell", inline: <<-SHELL
-  #   sudo apt-get update
+     sudo apt-get update
   #   sudo apt-get install -y puppet-common vim git
   #   sudo apt-get install -y virtualbox-guest-utils virtualbox-guest-x11 virtualbox-guest-dkms
-  #   sudo apt-get install -y git
-  #   sudo apt-get install -y wget
+     sudo apt-get install -y git
+     sudo apt-get install -y wget
      sudo apt-get install -y python-pip
      sudo apt-get install -y python-dev
   SHELL
