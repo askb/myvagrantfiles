@@ -37,7 +37,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           v.customize ["modifyvm", :id, "--cpus", "2"]
           v.gui = false
         end
-    # copy the root ssh keys and authorized_keys file in place
+    # copy pre-genereated ssh-keys and authorized_keys file in place
     newrdo2.vm.provision "file", source: "authorized_keys", destination:  "/tmp/ssh/authorized_keys"
     newrdo2.vm.provision "file", source: "newrdo2.id_dsa", destination:  "/tmp/ssh/id_dsa"
     newrdo2.vm.provision "file", source: "newrdo2.id_dsa.pub", destination:  "/tmp/ssh/id_dsa.pub"
@@ -60,11 +60,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	 sudo systemctl restart sshd.service
 
          systemctl stop NetworkManager;systemctl disable NetworkManager;chkconfig network on;systemctl start network;
-
-	 # alternative way to setup ssh keys between controller node and compute nodes
-         #sudo ssh-keygen -t rsa -P "" -f /root/.ssh/id_dsa
-	 #sudo ssh-copy-id -i /root/.ssh/id_dsa.pub root@10.0.1.11
-	 #sudo cat /root/.ssh/id_dsa.pub >> /root/.ssh/authorized_keys
 
 	 #install updates and packstack rpm
          #sudo rm -fr /var/cache/yum/*
@@ -111,12 +106,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	 sudo systemctl restart sshd.service
 
          systemctl stop NetworkManager;systemctl disable NetworkManager;chkconfig network on;systemctl start network;
-
-	 # alternative way to setup ssh keys between controller node and compute nodes
-         #sudo ssh-keygen -t rsa -P "" -f /root/.ssh/id_dsa
-	 #sudo ssh-copy-id -i /root/.ssh/id_dsa.pub root@10.0.1.10
-	 #sudo cat /root/.ssh/id_dsa.pub >> /root/.ssh/authorized_keys
-	 #sudo cat /root/.ssh/id_dsa.pub >> /shared/authorized_keys
 
 	 # install update and packstack
          #sudo rm -fr /var/cache/yum/*
