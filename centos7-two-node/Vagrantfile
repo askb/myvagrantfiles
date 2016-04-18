@@ -1,0 +1,54 @@
+# This downloads the minimal image for CentOS7
+# Author: askb23@gmail.com
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+# Vagrantfile API/syntax version.
+#
+# Pre-req:
+# Install VirtualBox, Vagrant
+# Install plugin vagrant-hostmanager
+# $ sudo vagrant plugin install vagrant-hostmanager
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.hostmanager.enabled = true
+  config.hostmanager.manage_host = false
+  config.hostmanager.ignore_private_ip = false
+  config.hostmanager.include_offline = true
+  config.vm.box = "geerlingguy/centos7"
+  config.vm.synced_folder "/myVMs/shared", "/shared", disabled: false
+
+# rdo1: controller node (all services except for compute)
+
+  config.vm.define "rdo1" do |rdo1|
+
+    rdo1.vm.network :private_network, ip: "10.0.1.10"
+    rdo1.vm.network :private_network, ip: "10.15.15.101"
+
+    rdo1.vm.hostname = "rdo1.mycloud.in"
+    rdo1.hostmanager.aliases = %w(rdo1)
+        rdo1.vm.provider "virtualbox" do |v|
+          v.customize ["modifyvm", :id, "--memory", "6144"]
+          v.customize ["modifyvm", :id, "--cpus", "2"]
+          v.gui = true
+        end
+  end
+
+# rdo2: compute host
+
+  config.vm.define "rdo2" do |rdo2|
+
+    rdo2.vm.network :private_network, ip: "10.0.1.11"
+    rdo2.vm.network :private_network, ip: "10.15.15.102"
+
+    rdo2.vm.hostname = "rdo2.mycloud.in"
+    rdo2.hostmanager.aliases = %w(rdo2)
+        rdo2.vm.provider "virtualbox" do |v|
+          v.customize ["modifyvm", :id, "--memory", "4096"]
+          v.customize ["modifyvm", :id, "--cpus", "2"]
+          v.gui = true
+        end
+  end
+end
